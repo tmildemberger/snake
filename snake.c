@@ -29,8 +29,8 @@ int kbhit(void) {
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     fcntl(STDIN_FILENO, F_SETFL, oldf);
     if(ch != EOF) {
-    ungetc(ch, stdin);
-    return 1;
+        ungetc(ch, stdin);
+        return 1;
     }
     return 0;
 }
@@ -67,7 +67,7 @@ void print_field(char field[SIZE][SIZE]) {
 
 int finish(Deck *d) {
     Point p = getFront(d);
-    if (p.x < 1 || p.x > SIZE-2 || p.y < 1 || p.y > SIZE-2)
+    if (p.x < 0 || p.x > SIZE-1 || p.y < 0 || p.y > SIZE-1)
         return 1;
     else
         return 0;
@@ -105,26 +105,8 @@ int main() {
     char pressionou_prv = ' ';
     char pressionou_act = LEFT;
 
-    while (!finish(d)) {
-        while ((!kbhit()) && (!finish(d))) {
-            Point p = getFront(d);
-            if (pressionou_act == UP) { d = insertFront(d, (Point){p.x, p.y-1});
-                field[p.x][p.y-1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-            else if (pressionou_act == DOWN) { d = insertFront(d, (Point){p.x, p.y+1});
-                field[p.x][p.y+1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-            else if (pressionou_act == LEFT) { d = insertFront(d, (Point){p.x-1, p.y});
-                field[p.x-1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-            else { d = insertFront(d, (Point){p.x+1, p.y});
-                field[p.x+1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-            p = getRear(d);
-            field[p.x][p.y] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
-            d = deleteRear(d);
-
-            print_field(field);
-            usleep(250000);
-            system("clear");
-        }
-        if (!finish(d)) {
+    while (1) {
+        if (kbhit()) {
             /*Cada vez que uma tecla é pressionada o controle executa esse trecho: */
             pressionou_prv = pressionou_act;
             pressionou_act = getchar();
@@ -132,7 +114,26 @@ int main() {
             else if ((pressionou_act == UP) && (pressionou_prv == DOWN)) { d = reverseDeck(d); }
             else if ((pressionou_act == LEFT) && (pressionou_prv == RIGHT)) { d = reverseDeck(d); }
             else if ((pressionou_act == RIGHT) && (pressionou_prv == LEFT)) { d = reverseDeck(d); }
-        }
+        } //else {
+        Point p = getFront(d);
+        if (pressionou_act == UP) { d = insertFront(d, (Point){p.x, p.y-1});
+        field[p.x][p.y-1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        else if (pressionou_act == DOWN) { d = insertFront(d, (Point){p.x, p.y+1});
+        field[p.x][p.y+1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        else if (pressionou_act == LEFT) { d = insertFront(d, (Point){p.x-1, p.y});
+        field[p.x-1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        else { d = insertFront(d, (Point){p.x+1, p.y});
+        field[p.x+1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        p = getRear(d);
+        field[p.x][p.y] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
+        d = deleteRear(d);
+
+        if (finish(d)) break;
+
+        print_field(field);
+        usleep(250000);
+        system("clear");
+        // }
     }
     printf ("#### Perdeu :(  \n");
     return 0;
