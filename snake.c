@@ -83,7 +83,8 @@ int main() {
     /*Inserindo a Snake no centro do campo: */
     int i;
     for (i = center-snake_size/2; i <= center+snake_size/2; i++) {
-        d = insertRear(d, (Point){i, center}, field);
+        d = insertRear(d, (Point){i, center});
+        field[i][center] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/
     }
 
     // printf("Tamanho: %d, centro: %d;\n", SIZE, center);
@@ -107,12 +108,18 @@ int main() {
     while (!finish(d)) {
         while ((!kbhit()) && (!finish(d))) {
             Point p = getFront(d);
-            if (pressionou_act == UP) { d = insertFront(d, (Point){p.x, p.y-1}, field); }
-            else if (pressionou_act == DOWN) { d = insertFront(d, (Point){p.x, p.y+1}, field); }
-            else if (pressionou_act == LEFT) { d = insertFront(d, (Point){p.x-1, p.y}, field); }
-            else { d = insertFront(d, (Point){p.x+1, p.y}, field); }
-            d = deleteRear(d, field);
-            // }
+            if (pressionou_act == UP) { d = insertFront(d, (Point){p.x, p.y-1});
+                field[p.x][p.y-1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+            else if (pressionou_act == DOWN) { d = insertFront(d, (Point){p.x, p.y+1});
+                field[p.x][p.y+1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+            else if (pressionou_act == LEFT) { d = insertFront(d, (Point){p.x-1, p.y});
+                field[p.x-1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+            else { d = insertFront(d, (Point){p.x+1, p.y});
+                field[p.x+1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+            p = getRear(d);
+            field[p.x][p.y] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
+            d = deleteRear(d);
+
             print_field(field);
             usleep(250000);
             system("clear");

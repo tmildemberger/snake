@@ -25,9 +25,7 @@ Point getRear(Deck *d) {
     return d->p;
 }
 
-Deck* insertFront(Deck *d, Point p, char field[][SIZE]) {
-    field[p.x][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/
-
+Deck* insertFront(Deck *d, Point p) {
     Deck *novo = (Deck*) malloc(sizeof (Deck));
     novo->p = p;
     novo->prev = NULL;
@@ -38,41 +36,39 @@ Deck* insertFront(Deck *d, Point p, char field[][SIZE]) {
     return novo;
 }
 
-Deck* insertRear(Deck *d, Point p, char field[][SIZE]) {
-    field[p.x][p.y] = '*';  /*Ponto inserido faz parte do corpo da Snake!*/
-
+Deck* insertRear(Deck *d, Point p) {
     Deck *novo = (Deck*) malloc(sizeof (Deck));
     novo->p = p;
     novo->next = NULL;
+    novo->prev = NULL;
 
-    Deck *aux = d;
     if (!emptyDeck(d)) {
+        Deck *aux = d;
         while (aux->next != NULL) {
             aux = aux->next;
         }
         aux->next = novo;
-    } else {
-        d = novo;
+        novo->prev = aux;
+        return d;
     }
-    novo->prev = aux;
-    return d;
+    return novo;
 }
 
-Deck* deleteFront(Deck *d, char field[][SIZE]) {
+Deck* deleteFront(Deck *d) {
     if (emptyDeck(d)) {
         printf("Deck vazio\n");
         exit(1);
     }
     Deck *aux = d->next;
-    aux->prev = NULL;
-
-    field[d->p.x][d->p.y] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
+    if (aux != NULL) {
+        aux->prev = NULL;
+    }
     free(d);
 
     return aux;
 }
 
-Deck* deleteRear(Deck *d, char field[][SIZE]) {
+Deck* deleteRear(Deck *d) {
     if (emptyDeck(d)) {
         printf("Deck vazio\n");
         exit(1);
@@ -84,7 +80,6 @@ Deck* deleteRear(Deck *d, char field[][SIZE]) {
     if (aux == d) {
         d = NULL;
     }
-    field[aux->p.x][aux->p.y] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
     aux->prev->next = NULL;
     free(aux);
     return d;

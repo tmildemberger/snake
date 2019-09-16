@@ -18,16 +18,16 @@ typedef struct deck {
 Deck* createDeck(void);
 
 /*Adiciona um item na cabeça da lista.*/
-Deck* insertFront(Deck *d, Point p, char field[][SIZE]);
+Deck* insertFront(Deck *d, Point p);
 
 /*Adiciona um item na cauda da lista.*/
-Deck* insertRear(Deck *d, Point p, char field[][SIZE]);
+Deck* insertRear(Deck *d, Point p);
 
 /*Remove um item da cabeça da lista.*/
-Deck* deleteFront(Deck *d, char field[][SIZE]);
+Deck* deleteFront(Deck *d);
 
 /*Remove um item da cauda da lista.*/
-Deck* deleteRear(Deck *d, char field[][SIZE]);
+Deck* deleteRear(Deck *d);
 
 /*Retorna sem remover o item na cabeça da lista.*/
 Point getFront(Deck *d);
