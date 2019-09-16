@@ -103,8 +103,9 @@ Deck* reverseDeck(Deck *d) {
     }
     Deck *aux = d;
     do {
+        Deck *temp = aux->next;
         aux->next = aux->prev;
-        aux->prev = aux->next;
+        aux->prev = temp;
         aux = aux->next;
     } while (aux != NULL);
     return d;

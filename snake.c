@@ -66,7 +66,6 @@ void print_field(char field[SIZE][SIZE]) {
 }
 
 int finish(Deck *d) {
-   /*Terminar!*/
     Point p = getFront(d);
     if (p.x < 1 || p.x > SIZE-2 || p.y < 1 || p.y > SIZE-2)
         return 1;
@@ -104,25 +103,16 @@ int main() {
 
     char pressionou_prv = ' ';
     char pressionou_act = LEFT;
-    // int reverse = 0; /*variável para inverter cabeça com cauda (e vice-versa)*/
+
     while (!finish(d)) {
         while ((!kbhit()) && (!finish(d))) {
-            if (reverse) {
-                Point p = getFront(d);
-                if (pressionou_act ==  UP) { d = insertFront(d, (Point){p.x-1, p.y}, field); }
-                else if (pressionou_act ==  DOWN) { d = insertFront(d, (Point){p.x+1, p.y}, field); }
-                else if (pressionou_act ==  LEFT) { d = insertFront(d, (Point){p.x, p.y-1}, field); }
-                else { d = insertFront(d, (Point){p.x, p.y+1}, field); }
-                d = deleteRear(d, field);
-            }
-            else {
-                Point p = getRear(d);
-                if (pressionou_act ==  UP) { d = insertRear(d, (Point){p.x-1, p.y}, field); }
-                else if (pressionou_act ==  DOWN) { d = insertRear(d, (Point){p.x+1, p.y}, field); }
-                else if (pressionou_act ==  LEFT) { d = insertRear(d, (Point){p.x, p.y-1}, field); }
-                else { d = insertRear(d, (Point){p.x, p.y+1}, field); }
-                d = deleteFront(d, field);
-            }
+            Point p = getFront(d);
+            if (pressionou_act == UP) { d = insertFront(d, (Point){p.x, p.y-1}, field); }
+            else if (pressionou_act == DOWN) { d = insertFront(d, (Point){p.x, p.y+1}, field); }
+            else if (pressionou_act == LEFT) { d = insertFront(d, (Point){p.x-1, p.y}, field); }
+            else { d = insertFront(d, (Point){p.x+1, p.y}, field); }
+            d = deleteRear(d, field);
+            // }
             print_field(field);
             usleep(250000);
             system("clear");
@@ -131,10 +121,10 @@ int main() {
             /*Cada vez que uma tecla é pressionada o controle executa esse trecho: */
             pressionou_prv = pressionou_act;
             pressionou_act = getchar();
-            if ((pressionou_act ==  DOWN) && (pressionou_prv ==  UP)) { reverse = !reverse; }
-            else if ((pressionou_act ==  UP) && (pressionou_prv ==  DOWN)) { reverse = !reverse; }
-            else if ((pressionou_act ==  LEFT) && (pressionou_prv ==  RIGHT)) { reverse = !reverse; }
-            else if ((pressionou_act ==  RIGHT) && (pressionou_prv ==  LEFT)) { reverse = !reverse; }
+            if ((pressionou_act == DOWN) && (pressionou_prv == UP)) { d = reverseDeck(d); }
+            else if ((pressionou_act == UP) && (pressionou_prv == DOWN)) { d = reverseDeck(d); }
+            else if ((pressionou_act == LEFT) && (pressionou_prv == RIGHT)) { d = reverseDeck(d); }
+            else if ((pressionou_act == RIGHT) && (pressionou_prv == LEFT)) { d = reverseDeck(d); }
         }
     }
     printf ("#### Perdeu :(  \n");
