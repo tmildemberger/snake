@@ -1,8 +1,6 @@
 #ifndef DECK_H
 #define DECK_H
 
-#define SIZE 20
-
 typedef struct {
     int x;
     int y;
