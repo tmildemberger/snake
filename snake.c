@@ -10,7 +10,6 @@
 #define LEFT 'a'
 #define RIGHT 'd'
 
-#define SIZE 20
 
 typedef struct fi {
     int width;
@@ -23,7 +22,7 @@ Field* create_field(int width, int height);
 void initialize_field(Field *field);
 void destroy_field(Field *field);
 void print_field(Field *field);
-int finish(Deck *d);
+int finish(Deck *d, Field *field);
 
 int kbhit(void) {
     struct termios oldt, newt;
@@ -59,8 +58,8 @@ Field* create_field(int width, int height) {
 
 void initialize_field(Field *field) {
     int i, j;
-    for (i = 0; i < SIZE; i++) {
-        for (j = 0; j < SIZE; j++) {
+    for (i = 0; i < field->height; i++) {
+        for (j = 0; j < field->width; j++) {
             field->field[i][j] = ' ';
         }
     }
@@ -78,34 +77,36 @@ void destroy_field(Field *field) {
 void print_field(Field *field) {
     int i, j;
     printf("  ");
-    for (i = 1; i < SIZE-1; i++) {
+    for (i = 1; i < field->width-1; i++) {
         printf(" #");
     }
     printf("\n");
-    for (i = 1; i < SIZE-1; i++) {
+    for (i = 1; i < field->height-1; i++) {
         printf(" # ");
-        for (j = 1; j < SIZE-1; j++) {
-            printf("%c ", field->field[j][i]);
+        for (j = 1; j < field->width-1; j++) {
+            printf("%c ", field->field[i][j]);
         }
         printf("#\n");
     }
     printf("  ");
-    for (i = 1; i < SIZE-1; i++) {
+    for (i = 1; i < field->width-1; i++) {
         printf(" #");
     }
     printf("\n");
 }
 
-int finish(Deck *d) {
+int finish(Deck *d, Field *field) {
     Point p = getFront(d);
-    if (p.x < 1 || p.x > SIZE-2 || p.y < 1 || p.y > SIZE-2)
+    if (p.x < 1 || p.x > field->width-2 || p.y < 1 || p.y > field->height-2)
         return 1;
     else
         return 0;
 }
 
+#define SIZE 20
+
 int main() {
-    Field *field = create_field(SIZE, SIZE);
+    Field *field = create_field(SIZE*2, SIZE);
     initialize_field(field);
     int center = SIZE/2;
     int snake_size = 5;
@@ -115,7 +116,7 @@ int main() {
     int i;
     for (i = center-snake_size/2; i <= center+snake_size/2; i++) {
         d = insertRear(d, (Point){i, center});
-        field->field[i][center] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/
+        field->field[center][i] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/
     }
 
     char pressionou_prv = ' ';
@@ -133,17 +134,17 @@ int main() {
         }
         Point p = getFront(d);
         if (pressionou_act == UP) { d = insertFront(d, (Point){p.x, p.y-1});
-        field->field[p.x][p.y-1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        field->field[p.y-1][p.x] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
         else if (pressionou_act == DOWN) { d = insertFront(d, (Point){p.x, p.y+1});
-        field->field[p.x][p.y+1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        field->field[p.y+1][p.x] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
         else if (pressionou_act == LEFT) { d = insertFront(d, (Point){p.x-1, p.y});
-        field->field[p.x-1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        field->field[p.y][p.x-1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
         else { d = insertFront(d, (Point){p.x+1, p.y});
-        field->field[p.x+1][p.y] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
+        field->field[p.y][p.x+1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
 
-        if (finish(d)) break;
+        if (finish(d, field)) break;
         p = getRear(d);
-        field->field[p.x][p.y] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
+        field->field[p.y][p.x] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
         d = deleteRear(d);
 
 
