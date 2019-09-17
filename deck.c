@@ -105,3 +105,11 @@ Deck* reverseDeck(Deck *d) {
     } while (aux != NULL);
     return d;
 }
+
+void destroyDeck(Deck *d) {
+    while (d) {
+        Deck *aux = d->next;
+        free(d);
+        d = aux;
+    }
+}

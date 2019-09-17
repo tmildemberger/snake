@@ -39,4 +39,7 @@ int emptyDeck(Deck *d);
 /*Retorna o mesmo deck mas todo ao contrário*/
 Deck* reverseDeck(Deck *d);
 
+/*Desaloca o deck inteiro*/
+void destroyDeck(Deck *d);
+
 #endif // DECK_H

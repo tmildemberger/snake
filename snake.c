@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include <time.h>
 #include <fcntl.h>
 #include "deck.h"
 
@@ -10,6 +11,7 @@
 #define LEFT 'a'
 #define RIGHT 'd'
 
+#define FOOD '@'
 
 typedef struct fi {
     int width;
@@ -17,12 +19,26 @@ typedef struct fi {
     char **field;
 } Field;
 
+typedef struct snake {
+    Deck *d;
+    Field *field;
+    int size;
+    char dir;
+} Snake;
+
 int kbhit(void);
 Field* create_field(int width, int height);
 void initialize_field(Field *field);
 void destroy_field(Field *field);
+void gen_food(Field *field);
 void print_field(Field *field);
-int finish(Deck *d, Field *field);
+
+int alive_snake(Snake *s);
+Snake* create_snake(int size, Field *field);
+void reverse_snake(Snake *s);
+void dir_snake(Snake *s, char dir);
+void move_snake(Snake *s);
+void destroy_snake(Snake *s);
 
 int kbhit(void) {
     struct termios oldt, newt;
@@ -74,6 +90,16 @@ void destroy_field(Field *field) {
     free(field);
 }
 
+void gen_food(Field *field) {
+    int x = (rand() % (field->width - 1)) + 1;
+    int y = (rand() % (field->height - 1)) + 1;
+    while (field->field[y][x] != ' ') {
+        x = (rand() % (field->width - 1)) + 1;
+        y = (rand() % (field->height - 1)) + 1;
+    }
+    field->field[y][x] = FOOD;
+}
+
 void print_field(Field *field) {
     int i, j;
     printf("  ");
@@ -95,29 +121,79 @@ void print_field(Field *field) {
     printf("\n");
 }
 
-int finish(Deck *d, Field *field) {
-    Point p = getFront(d);
-    if (p.x < 1 || p.x > field->width-2 || p.y < 1 || p.y > field->height-2)
-        return 1;
-    else
+int alive_snake(Snake *s) {
+    Point p = getFront(s->d);
+    if (p.x < 1 || p.x > s->field->width - 2 ||
+        p.y < 1 || p.y > s->field->height- 2)
         return 0;
+    else
+        return 1;
+}
+
+Snake* create_snake(int size, Field *field) {
+    Snake *new_snake = (Snake*) malloc(sizeof (Snake));
+    new_snake->field = field;
+    new_snake->d = createDeck();
+    new_snake->size = size;
+    new_snake->dir = LEFT;
+
+    /*Inserindo a Snake no centro do campo: */
+    int i;
+    int center = field->height / 2;
+    for (i = (field->width - size) / 2; i <= (field->width + size) / 2; i++) {
+        new_snake->d = insertRear(new_snake->d, (Point){i, center});
+        field->field[center][i] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/
+    }
+    return new_snake;
+}
+
+void reverse_snake(Snake *s) {
+    s->d = reverseDeck(s->d);
+}
+
+void dir_snake(Snake *s, char dir) {
+    s->dir = dir;
+}
+
+void move_snake(Snake *s) {
+    Point p = getFront(s->d);
+    if (s->dir == UP) --p.y;
+    else if (s->dir == DOWN) ++p.y;
+    else if (s->dir == LEFT) --p.x;
+    else ++p.x;
+
+    printf("x:%d y:%d\n", p.x, p.y);
+    if (s->field->field[p.y][p.x] == FOOD) {
+        gen_food(s->field);
+        s->d = insertFront(s->d, p);
+        s->field->field[p.y][p.x] = '*';
+        ++s->size;
+        return;
+    }
+    s->d = insertFront(s->d, p);
+    s->field->field[p.y][p.x] = '*';
+
+    p = getRear(s->d);
+    s->field->field[p.y][p.x] = ' ';
+    s->d = deleteRear(s->d);
+}
+
+void destroy_snake(Snake *s) {
+    destroyDeck(s->d);
+    free(s);
 }
 
 #define SIZE 20
 
 int main() {
+    srand(time(NULL));
+
     Field *field = create_field(SIZE*2, SIZE);
     initialize_field(field);
-    int center = SIZE/2;
     int snake_size = 5;
-    Deck *d = createDeck();
+    Snake *snake = create_snake(snake_size, field);
 
-    /*Inserindo a Snake no centro do campo: */
-    int i;
-    for (i = center-snake_size/2; i <= center+snake_size/2; i++) {
-        d = insertRear(d, (Point){i, center});
-        field->field[center][i] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/
-    }
+    gen_food(field);
 
     char pressionou_prv = ' ';
     char pressionou_act = LEFT;
@@ -127,31 +203,28 @@ int main() {
             /*Cada vez que uma tecla é pressionada o controle executa esse trecho: */
             pressionou_prv = pressionou_act;
             pressionou_act = getchar();
-            if ((pressionou_act == DOWN) && (pressionou_prv == UP)) { d = reverseDeck(d); }
-            else if ((pressionou_act == UP) && (pressionou_prv == DOWN)) { d = reverseDeck(d); }
-            else if ((pressionou_act == LEFT) && (pressionou_prv == RIGHT)) { d = reverseDeck(d); }
-            else if ((pressionou_act == RIGHT) && (pressionou_prv == LEFT)) { d = reverseDeck(d); }
+            dir_snake(snake, pressionou_act);
+            if ((pressionou_act == DOWN) && (pressionou_prv == UP)) { reverse_snake(snake); }
+            else if ((pressionou_act == UP) && (pressionou_prv == DOWN)) { reverse_snake(snake); }
+            else if ((pressionou_act == LEFT) && (pressionou_prv == RIGHT)) { reverse_snake(snake); }
+            else if ((pressionou_act == RIGHT) && (pressionou_prv == LEFT)) { reverse_snake(snake); }
         }
-        Point p = getFront(d);
-        if (pressionou_act == UP) { d = insertFront(d, (Point){p.x, p.y-1});
-        field->field[p.y-1][p.x] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-        else if (pressionou_act == DOWN) { d = insertFront(d, (Point){p.x, p.y+1});
-        field->field[p.y+1][p.x] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-        else if (pressionou_act == LEFT) { d = insertFront(d, (Point){p.x-1, p.y});
-        field->field[p.y][p.x-1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-        else { d = insertFront(d, (Point){p.x+1, p.y});
-        field->field[p.y][p.x+1] = '*'; /*Ponto inserido faz parte do corpo da Snake!*/ }
-
-        if (finish(d, field)) break;
-        p = getRear(d);
-        field->field[p.y][p.x] = ' '; /*Ponto eliminado agora é marcado como vazio!*/
-        d = deleteRear(d);
-
+        move_snake(snake);
+        if (!alive_snake(snake)) break;
+        printf("ola\n");
 
         print_field(field);
         usleep(250000);
         system("clear");
     }
-    printf ("#### Perdeu :(  \n");
+    print_field(field);
+    printf ("#### Perdeu :(\n");
+    printf ("#### Pontuacao final (tamanho da cobrinha): %d\n", snake->size);
+    if (snake->size > 16) {
+        printf ("#### Obs: :D\n");
+    }
+
+    destroy_snake(snake);
+    destroy_field(field);
     return 0;
 }
